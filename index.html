@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MAC to IP Converter</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #f5f8fa;
+      color: #33475b;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+      padding: 32px;
+      max-width: 420px;
+      width: 100%;
+    }
+    h1 {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+    .subtitle {
+      font-size: 13px;
+      color: #7c98b6;
+      margin-bottom: 24px;
+    }
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 16px;
+      font-family: monospace;
+      border: 1px solid #cbd6e2;
+      border-radius: 4px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input[type="text"]:focus {
+      border-color: #0091ae;
+    }
+    .hint {
+      font-size: 12px;
+      color: #99acc2;
+      margin-top: 4px;
+    }
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 11px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      background: #0091ae;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    button:hover { background: #007a91; }
+    .result {
+      margin-top: 20px;
+      padding: 16px;
+      background: #e5f5f8;
+      border-radius: 6px;
+      text-align: center;
+      display: none;
+    }
+    .result .ip {
+      font-size: 28px;
+      font-weight: 700;
+      font-family: monospace;
+      color: #0091ae;
+      margin-top: 4px;
+      user-select: all;
+    }
+    .result .label {
+      font-size: 12px;
+      color: #516f90;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .error {
+      margin-top: 12px;
+      color: #d94c53;
+      font-size: 13px;
+      display: none;
+    }
+    .breakdown {
+      margin-top: 12px;
+      font-size: 13px;
+      color: #516f90;
+    }
+    .breakdown code {
+      background: #f5f8fa;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>MAC to Default IP</h1>
+    <p class="subtitle">Convert a device MAC address to its default 10.223.x.x IP</p>
+
+    <label for="mac">MAC Address</label>
+    <input type="text" id="mac" placeholder="e.g. 00:11:22:33:AB:CD" autocomplete="off" spellcheck="false">
+    <p class="hint">Accepts formats: AA:BB:CC:DD:EE:FF, AA-BB-CC-DD-EE-FF, or AABBCCDDEEFF</p>
+
+    <button id="convert">Convert</button>
+
+    <p class="error" id="error"></p>
+
+    <div class="result" id="result">
+      <span class="label">Default IP Address</span>
+      <div class="ip" id="ip"></div>
+      <div class="breakdown" id="breakdown"></div>
+    </div>
+  </div>
+
+  <script>
+    const macInput = document.getElementById('mac');
+    const convertBtn = document.getElementById('convert');
+    const resultDiv = document.getElementById('result');
+    const ipDiv = document.getElementById('ip');
+    const breakdownDiv = document.getElementById('breakdown');
+    const errorP = document.getElementById('error');
+
+    function parseMac(raw) {
+      // Strip common separators and whitespace
+      const cleaned = raw.trim().replace(/[:\-.\s]/g, '');
+      if (!/^[0-9a-fA-F]{12}$/.test(cleaned)) return null;
+      // Split into 6 bytes
+      return cleaned.match(/.{2}/g);
+    }
+
+    function convert() {
+      errorP.style.display = 'none';
+      resultDiv.style.display = 'none';
+
+      const bytes = parseMac(macInput.value);
+      if (!bytes) {
+        errorP.textContent = 'Invalid MAC address. Please enter a valid 12-character hex MAC.';
+        errorP.style.display = 'block';
+        return;
+      }
+
+      const penultimate = parseInt(bytes[4], 16); // 5th byte -> 3rd octet
+      const last = parseInt(bytes[5], 16);         // 6th byte -> 4th octet
+
+      const ip = `10.223.${penultimate}.${last}`;
+
+      ipDiv.textContent = ip;
+      breakdownDiv.innerHTML =
+        `MAC bytes: <code>${bytes[4].toUpperCase()}</code> = ${penultimate}, ` +
+        `<code>${bytes[5].toUpperCase()}</code> = ${last}`;
+      resultDiv.style.display = 'block';
+    }
+
+    convertBtn.addEventListener('click', convert);
+    macInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') convert();
+    });
+  </script>
+</body>
+</html>
